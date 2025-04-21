@@ -11,4 +11,8 @@
     "strictPropertyInitialization": false,        
     "skipLibCheck": true
   },
+  "exclude": [
+    "migration.ts",
+    "drizzle.config.ts"
+  ]
 }

@@ -5,33 +5,39 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts"
+    "dev": "nodemon src/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "db-push": "drizzle-kit push:pg",
+    "db:migrate": "tsx ./migration.ts",
+    "db:studio": "drizzle-kit studio --port 6000"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@prisma/client": "^6.6.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.42.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.14.1",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "pino-pretty": "^13.0.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.14.1",
     "@types/pg": "^8.11.13",
+    "drizzle-kit": "^0.31.0",
     "nodemon": "^3.1.9",
-    "prisma": "^6.6.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"

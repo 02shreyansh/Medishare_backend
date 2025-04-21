@@ -26,6 +26,6 @@ export class AuthResponse{
         public readonly email: string,
         public readonly phone_number: string,
         public readonly role?:Status['role'],
-        public readonly id?: number
+        public readonly id?: number,
     ){}
 }
