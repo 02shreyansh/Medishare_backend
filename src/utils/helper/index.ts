@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import { Request } from "express";
 import jwt from "jsonwebtoken";
 import { Connect } from "../../config/connect";
 declare global {
@@ -19,8 +18,6 @@ interface PayloadData {
   id: number;
   email: string;
 }
-const REFRESH_TOKEN_SECRET = Connect.REFRESH_TOKEN_SECRET;
-const REFRESH_TOKEN_EXPIRY = Connect.REFRESH_TOKEN_EXPIRY;
 export const GenerateSalt = async () => {
   return await bcrypt.genSalt(12);
 };
@@ -32,16 +29,15 @@ export const GeneratePassword = async (password: string, salt: string) => {
 export const ValidatePassword = async (
   enteredPassword: string,
   savedPassword: string,
-  salt: string
 ) => {
-  return (await GeneratePassword(enteredPassword, salt)) === savedPassword;
+  return await bcrypt.compare(enteredPassword, savedPassword);
 };
 
 export const GenerateRefreshToken = async (payload: PayloadData) => {
   try {
-    return jwt.sign(payload, Connect.REFRESH_TOKEN_SECRET  as jwt.Secret,{
-        expiresIn: Connect.REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
-        algorithm: "HS256",
+    return jwt.sign(payload, Connect.REFRESH_PRIVATE_KEY, {
+      expiresIn: Connect.REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
+      algorithm: "ES256",
     });
   } catch (error) {
     console.log(error);
@@ -49,46 +45,36 @@ export const GenerateRefreshToken = async (payload: PayloadData) => {
   }
 };
 
-// export const ValidateSignature = async (req: Request) => {
-//   try {
-//     const signature = req.cookies.token as string;
-//     const payload = jwt.verify(signature, envValues.APP_SECRET) as User;
-//     req.user = payload;
-//     return true;
-//   } catch (error) {
-//     console.log(error);
-//     return false;
-//   }
-// };
+export const GenerateAccessToken = async (payload: PayloadData) => {
+  try {
+    return jwt.sign(payload, Connect.ACCESS_PRIVATE_KEY, {
+      expiresIn: Connect.ACCESS_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
+      algorithm: "ES256",
+    });
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
 
-// // Generate access token
-// export const generateAccessToken = (userId) => {
-//   return jwt.sign({ userId }, ACCESS_TOKEN_SECRET, {
-//     expiresIn: ACCESS_TOKEN_EXPIRY,
-//   });
-// };
+export const VerifyRefreshToken=async (token:string)=>{
+  try{
+    return jwt.verify(token,Connect.REFRESH_PUBLIC_KEY,{
+      algorithms:["ES256"]
+    });
+  }catch(error){
+    console.log(error);
+    return null;
+  }
+}
 
-// // Generate refresh token
-// export const generateRefreshToken = (userId) => {
-//   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
-//     expiresIn: REFRESH_TOKEN_EXPIRY,
-//   });
-// };
-
-// // Verify access token
-// export const verifyAccessToken = (token) => {
-//   try {
-//     return jwt.verify(token, ACCESS_TOKEN_SECRET);
-//   } catch (error) {
-//     return null;
-//   }
-// };
-
-// // Verify refresh token
-// export const verifyRefreshToken = (token) => {
-//   try {
-//     return jwt.verify(token, REFRESH_TOKEN_SECRET);
-//   } catch (error) {
-//     return null;
-//   }
-// };
+export const VerifyAccessToken = (token: string) => {
+  try {
+    return jwt.verify(token, Connect.ACCESS_PUBLIC_KEY, { 
+      algorithms: ['ES256'] 
+    });
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
