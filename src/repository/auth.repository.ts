@@ -2,7 +2,8 @@ import { IAuthRepository } from "../interface/auth.interface";
 import { DB } from "../db/db.connection";
 import { Signup } from "../model/auth.model";
 import { User, users } from "../db/schema";
-import { NotFoundError} from "../utils";
+import { APIError, NotFoundError } from "../utils";
+import { eq } from "drizzle-orm";
 
 export class AuthRepository implements IAuthRepository {
   _db: typeof DB;
@@ -17,9 +18,15 @@ export class AuthRepository implements IAuthRepository {
     const existingCustomer = await this._db.query.users.findFirst({
       where: (users, { eq }) => eq(users.email, email),
     });
-    if (!existingCustomer) {
-      throw new NotFoundError("User not found");
-    }
-    return existingCustomer;
+    return existingCustomer as User;
+  }
+  async FindUserByPhoneNumber({
+    phone_number,
+  }: {
+    phone_number: string;
+  }): Promise<Boolean> {
+    const existingCustomer = await this._db.select({phone_number:users.phone_number}).from(users).where(eq(users.phone_number,phone_number)).limit(1);
+    console.log(existingCustomer);
+    return existingCustomer.length > 0
   }
 }
