@@ -3,6 +3,5 @@ import { Signup,Signin } from "../model/auth.model";
 
 export interface IAuthRepository{
     signup(data:Signup): Promise<User>;
-    signin(data:Signin): Promise<User>;
-    validate(token:string):Promise<User>;
+    FindCustomer({ email }:{email:string}):Promise<User>
 }

@@ -1,5 +1,5 @@
 import express from "express";
-// import catalogRouter from "./api/catalog.route";
+import userRouter from "./api/auth.route";
 import cookieParser from "cookie-parser";
 import { httpLogger, HandleErrorWithLogger } from "./utils";
 import { Request, Response, NextFunction } from "express";
@@ -10,10 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(httpLogger);
-// app.use("/", catalogRouter);
-app.use("/", (req: Request, res: Response, _: NextFunction) => {
-  res.status(200).json({ message: "Auth Service" });
-});
+app.use("/", userRouter);
 
 const errorHandler: ErrorHandler = (err, req, res, next) =>
   HandleErrorWithLogger(err, req, res, next);
