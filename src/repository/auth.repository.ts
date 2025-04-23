@@ -2,7 +2,6 @@ import { IAuthRepository } from "../interface/auth.interface";
 import { DB } from "../db/db.connection";
 import { Signup } from "../model/auth.model";
 import { User, users } from "../db/schema";
-import { APIError, NotFoundError } from "../utils";
 import { eq } from "drizzle-orm";
 
 export class AuthRepository implements IAuthRepository {

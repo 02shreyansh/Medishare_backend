@@ -1,19 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Connect } from "../../config/connect";
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User;
-    }
-  }
-}
-export interface User {
-  id: number;
-  email: string;
-  iat: number;
-  exp: number;
-}
 interface PayloadData {
   id: number;
   email: string;

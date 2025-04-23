@@ -31,7 +31,4 @@ export class SigninRequest{
     @IsString()
     @IsNotEmpty()
     password:string;
-
-    @IsString()
-    role?:Status['role'];
 }
