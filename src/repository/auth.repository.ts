@@ -24,8 +24,29 @@ export class AuthRepository implements IAuthRepository {
   }: {
     phone_number: string;
   }): Promise<Boolean> {
-    const existingCustomer = await this._db.select({phone_number:users.phone_number}).from(users).where(eq(users.phone_number,phone_number)).limit(1);
+    const existingCustomer = await this._db
+      .select({ phone_number: users.phone_number })
+      .from(users)
+      .where(eq(users.phone_number, phone_number))
+      .limit(1);
     console.log(existingCustomer);
-    return existingCustomer.length > 0
+    return existingCustomer.length > 0;
+  }
+
+  /**
+   * Updates the refresh token for a user
+   * @param userId - The user's ID
+   * @param refreshToken - The new refresh token to store
+   * @returns void
+   */
+  async UpdateRefreshToken(
+    userId: number,
+    refreshToken: string
+  ): Promise<void> {
+    await this._db
+      .update(users)
+      .set({ refresh_token: refreshToken })
+      .where(eq(users.id, userId))
+      .returning();
   }
 }

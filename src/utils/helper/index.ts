@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Connect } from "../../config/connect";
+import "dotenv/config";
+import { CookieOptions } from "express";
 interface PayloadData {
   id: number;
   email: string;
@@ -65,3 +67,17 @@ export const VerifyAccessToken = (token: string) => {
     return null;
   }
 };
+
+export const AccessTokenOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", 
+  sameSite: "strict",
+  maxAge: 15 * 60 * 1000, 
+} as CookieOptions; 
+
+export const RefreshTokenOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000, 
+} as CookieOptions;

@@ -3,6 +3,7 @@ import { AuthService } from "../service/auth.service";
 import { AuthRepository } from "../repository/auth.repository";
 import { SigninRequest, SignupRequest } from "../dto/auth.dto";
 import { RequestValidator } from "../utils/requestValidator";
+import { AccessTokenOptions, RefreshTokenOptions } from "../utils";
 const router = express.Router();
 
 export const authService = new AuthService(new AuthRepository());
@@ -16,7 +17,10 @@ router.post(
         res.status(400).json(errors);
         return;
       }
-      const data = await authService.createUser(input);
+      const {user:data , tokens} = await authService.createUser(input);
+      res.cookie("accessToken",tokens.accessToken,AccessTokenOptions);
+      res.cookie("refreshToken",tokens.refreshToken,RefreshTokenOptions);
+
       res.status(201).json({
         message: "User created successfully",
         data: {
