@@ -45,7 +45,7 @@ export class AuthRepository implements IAuthRepository {
   ): Promise<void> {
     await this._db
       .update(users)
-      .set({ refresh_token: refreshToken })
+      .set({ refresh_token:refreshToken })
       .where(eq(users.id, userId))
       .returning();
   }

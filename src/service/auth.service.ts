@@ -76,7 +76,7 @@ export class AuthService {
         email: input.email,
       });
       if (!existingCustomer) {
-        throw new NotFoundError();
+        throw new NotFoundError("User not found");
       }
 
       const isPasswordValid = await ValidatePassword(
@@ -84,14 +84,35 @@ export class AuthService {
         existingCustomer.password
       );
       if (!isPasswordValid) {
-        throw new ValidationError();
+        throw new ValidationError("Invalid password");
       }
-      return existingCustomer;
+      const accessToken = await GenerateAccessToken({
+        id: existingCustomer.id,
+        email: existingCustomer.email,
+      });
+      if (typeof accessToken !== "string") {
+        throw new APIError("Failed to generate access token");
+      }
+      const refreshToken = await GenerateRefreshToken({
+        id: existingCustomer.id,
+        email: existingCustomer.email,
+      });
+      if (typeof refreshToken !== "string") {
+        throw new APIError("Failed to generate refresh token");
+      }
+      await this._repository.UpdateRefreshToken(existingCustomer.id, refreshToken);
+      existingCustomer.refresh_token = refreshToken;
+      
+      return {
+        user: existingCustomer,
+        tokens: {
+          accessToken,
+          refreshToken 
+        }
+      };
     } catch (error) {
-      if (error instanceof ValidationError) {
-        throw new APIError("Invalid password");
-      } else {
-        throw new NotFoundError("User not found");
+      if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof APIError) {
+        throw error;
       }
     }
   }

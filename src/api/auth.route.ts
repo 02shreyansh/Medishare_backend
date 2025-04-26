@@ -46,7 +46,14 @@ router.post(
         res.status(400).json(errors);
         return;
       }
-      const data=await authService.loginUser(input);
+      const result = await authService.loginUser(input);
+      if (!result) {
+        res.status(500).json({ message: "Login failed. Please try again." });
+        return;
+      }
+      const { user: data, tokens } = result;
+      res.cookie("accessToken",tokens.accessToken,AccessTokenOptions);
+      res.cookie("refreshToken",tokens.refreshToken,RefreshTokenOptions);
       res.status(200).json({
         message:"User logged in successfully",
         data:{
