@@ -1,8 +1,4 @@
 import { IsNotEmpty, IsString } from "class-validator";
-
-export interface Status {
-    role: 'user' | 'admin';
-}
 export class SignupRequest{
     @IsString()
     @IsNotEmpty()
@@ -19,9 +15,6 @@ export class SignupRequest{
     @IsString()
     @IsNotEmpty()
     password:string;
-
-    @IsString()
-    role?:Status['role'];
 }
 export class SigninRequest{
     @IsString()

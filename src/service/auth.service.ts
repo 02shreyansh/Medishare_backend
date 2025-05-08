@@ -1,7 +1,9 @@
 import { IAuthRepository } from "../interface/auth.interface";
 import { Signin, Signup } from "../model/auth.model";
+import jwt from "jsonwebtoken";
 import {
   APIError,
+  AuthorizeError,
   GenerateAccessToken,
   GeneratePassword,
   GenerateRefreshToken,
@@ -9,7 +11,9 @@ import {
   NotFoundError,
   ValidatePassword,
   ValidationError,
+  VerifyRefreshToken,
 } from "../utils";
+import { Connect } from "../config/connect";
 
 export class AuthService {
   private _repository: IAuthRepository;
@@ -60,11 +64,15 @@ export class AuthService {
         user: data,
         tokens: {
           accessToken,
-          refreshToken 
-        }
+          refreshToken,
+        },
       };
     } catch (error) {
-      if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof APIError) {
+      if (
+        error instanceof ValidationError ||
+        error instanceof NotFoundError ||
+        error instanceof APIError
+      ) {
         throw error;
       }
       throw new APIError("Failed to create user");
@@ -100,18 +108,25 @@ export class AuthService {
       if (typeof refreshToken !== "string") {
         throw new APIError("Failed to generate refresh token");
       }
-      await this._repository.UpdateRefreshToken(existingCustomer.id, refreshToken);
+      await this._repository.UpdateRefreshToken(
+        existingCustomer.id,
+        refreshToken
+      );
       existingCustomer.refresh_token = refreshToken;
-      
+
       return {
         user: existingCustomer,
         tokens: {
           accessToken,
-          refreshToken 
-        }
+          refreshToken,
+        },
       };
     } catch (error) {
-      if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof APIError) {
+      if (
+        error instanceof ValidationError ||
+        error instanceof NotFoundError ||
+        error instanceof APIError
+      ) {
         throw error;
       }
     }
@@ -130,6 +145,75 @@ export class AuthService {
         throw new NotFoundError("User not found");
       }
       throw new APIError("Something went wrong while validating user");
+    }
+  }
+  async refreshTokens(refreshToken: string) {
+    try {
+      const decoded = await VerifyRefreshToken(refreshToken) as any;
+      if (!decoded) {
+        throw new AuthorizeError("Invalid refresh token");
+      }
+      const user = await this._repository.FindCustomer({
+        email: decoded.email,
+      });
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+      if (user.refresh_token !== refreshToken) {
+        throw new AuthorizeError("Invalid refresh token");
+      }
+      const expiresAt = new Date(decoded.expiresAt);
+      if (new Date() > expiresAt) {
+        throw new AuthorizeError("Refresh token expired");
+      }
+      const accessToken = await GenerateAccessToken({
+        id: user.id,
+        email: user.email,
+      });
+      if (typeof accessToken !== "string") {
+        throw new APIError("Failed to generate access token");
+      }
+      const newRefreshToken = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          tokenFamily: decoded.tokenFamily,
+          expiresAt: decoded.expiresAt,
+        },
+        Connect.REFRESH_PRIVATE_KEY,
+        {
+          expiresIn:
+            Connect.REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
+          algorithm: "ES256",
+        }
+      );
+      if (typeof newRefreshToken !== "string") {
+        throw new APIError("Failed to generate refresh token");
+      }
+      
+      await this._repository.UpdateRefreshToken(user.id, newRefreshToken);
+      user.refresh_token = newRefreshToken;
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      if (error instanceof AuthorizeError) {
+        throw error;
+      }
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new APIError("Failed to refresh tokens");
+    }
+  }
+  async logoutUser(userId: number) {
+    try {
+      await this._repository.UpdateRefreshToken(userId, null);
+      return true;
+    } catch (error) {
+      throw new APIError("Failed to logout user");
     }
   }
 }

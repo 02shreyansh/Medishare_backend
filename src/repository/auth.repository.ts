@@ -41,7 +41,7 @@ export class AuthRepository implements IAuthRepository {
    */
   async UpdateRefreshToken(
     userId: number,
-    refreshToken: string
+    refreshToken: string | null
   ): Promise<void> {
     await this._db
       .update(users)
